@@ -1,0 +1,70 @@
+<?php
+// Database connection
+$host = 'localhost';
+$db = 'ywca';
+$user = 'root'; // Adjust based on your database setup
+$pass = ''; // Adjust based on your database setup
+
+// Create connection
+$conn = new mysqli($host, $user, $pass, $db);
+if ($conn->connect_error) {
+    die("Connection failed: " . $conn->connect_error);
+}
+
+// Login Process
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['login'])) {
+    if (isset($_POST['loginEmail']) && isset($_POST['loginPassword'])) {
+        $email = $_POST['loginEmail'];
+        $password = $_POST['loginPassword'];
+
+        // Check if the email exists
+        $sql = "SELECT * FROM users WHERE email = ?";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param('s', $email);
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        if ($result->num_rows > 0) {
+            $user = $result->fetch_assoc();
+            if (password_verify($password, $user['password'])) {
+                echo "Login successful! Welcome, " . $user['name'] . ".";
+            } else {
+                echo "Invalid password.";
+            }
+        } else {
+            echo "No user found with this email.";
+        }
+    }
+}
+?>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <style>
+        /* Add your styling here */
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Login</h2>
+    <form method="POST" action="">
+        <div class="form-group">
+            <input type="email" name="loginEmail" placeholder="Email" required>
+        </div>
+        <div class="form-group">
+            <input type="password" name="loginPassword" placeholder="Password" required>
+        </div>
+        <button type="submit" name="login">Login</button>
+    </form>
+
+    <p>Forgot your password? <a href="forgot_password.php">Click here</a> to reset it.</p>
+    <p>Don't have an account? <a href="registration.php">Register here</a></p>
+</div>
+
+</body>
+</html>

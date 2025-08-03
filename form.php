@@ -1,0 +1,414 @@
+<?php
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    // Capture form data
+    $name = $_POST['name'];
+    $dob = $_POST['dob'];
+    $age_group = $_POST['age_group'];
+    $education = $_POST['education'];
+    $residential_address = $_POST['residential_address'];
+    $communication_address = $_POST['communication_address'];
+    $email = $_POST['email'];
+    $phone = $_POST['phone'];
+    $nationality = $_POST['nationality'];
+    $occupation = $_POST['occupation'];
+    $original_membership_year = $_POST['original_membership_year'];
+    $break_year = $_POST['break_year'];
+    $committee_experience = $_POST['committee_experience'];
+    $office_bearer = $_POST['office_bearer'];
+    $board_member = $_POST['board_member'];
+    $voluntary_work = $_POST['voluntary_work'];
+    $interest_areas = implode(', ', $_POST['interest_areas']);
+
+    // Database connection
+    $host = 'localhost';
+    $db = 'ywca';
+    $user = 'root'; // Adjust based on your database setup
+    $pass = '';
+
+    try {
+        $pdo = new PDO("mysql:host=$host;dbname=$db", $user, $pass);
+        $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+
+        // Check if email or phone already exists in the database
+        $stmt_check = $pdo->prepare("SELECT * FROM members WHERE email = :email OR phone = :phone");
+        $stmt_check->execute([':email' => $email, ':phone' => $phone]);
+
+        // If email or phone is found, show a message
+        if ($stmt_check->rowCount() > 0) {
+            echo "<script>
+                alert('Error: The email or phone number is already in use. Please enter a unique email and phone number.');
+                window.history.back(); // Go back to the previous page
+            </script>";
+        } else {
+            // Insert data into the database
+            $stmt = $pdo->prepare("INSERT INTO members 
+                (name, dob, age_group, education, residential_address, communication_address, email, phone, nationality, 
+                occupation, original_membership_year, break_year, committee_experience, office_bearer, board_member, 
+                voluntary_work, interest_areas) VALUES 
+                (:name, :dob, :age_group, :education, :residential_address, :communication_address, :email, :phone, :nationality, 
+                :occupation, :original_membership_year, :break_year, :committee_experience, :office_bearer, :board_member, 
+                :voluntary_work, :interest_areas)");
+
+            $stmt->execute([
+                ':name' => $name,
+                ':dob' => $dob,
+                ':age_group' => $age_group,
+                ':education' => $education,
+                ':residential_address' => $residential_address,
+                ':communication_address' => $communication_address,
+                ':email' => $email,
+                ':phone' => $phone,
+                ':nationality' => $nationality,
+                ':occupation' => $occupation,
+                ':original_membership_year' => $original_membership_year,
+                ':break_year' => $break_year,
+                ':committee_experience' => $committee_experience,
+                ':office_bearer' => $office_bearer,
+                ':board_member' => $board_member,
+                ':voluntary_work' => $voluntary_work,
+                ':interest_areas' => $interest_areas,
+            ]);
+
+            echo "<script>
+                alert('Form Submitted Successfully!');
+                window.location.href = 'form.php'; // Redirect to a thank-you page or the same page
+            </script>";
+        }
+    } catch (PDOException $e) {
+        echo "<script>
+            alert('Error: " . $e->getMessage() . "');
+            window.history.back(); // Redirects the user back to the previous page
+        </script>";
+    }
+} else {
+    // If the form is not submitted, display a cancel message
+    if (isset($_GET['cancel']) && $_GET['cancel'] == 'true') {
+        echo "<script>
+            alert('Form submission canceled!');
+            window.location.href = 'form.php'; // Redirect to a previous page or the form page
+        </script>";
+    }
+}
+?>
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Membership Form</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+  body {
+    margin: 0;
+    font-family: 'Roboto', sans-serif;
+    background: url('img/formimg.jpg') no-repeat center center fixed;
+    background-size: cover;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+}
+
+.contact-form {
+    background: rgba(255, 255, 255, 0.7); /* Adjusted transparency */
+    box-shadow: 8px 8px 16px #bebebe, -8px -8px 16px #ffffff;
+    border-radius: 15px;
+    padding: 30px;
+    width: 100%;
+    max-width: 600px;
+}
+
+.contact-form h2 {
+    text-align: center;
+    font-size: 24px;
+    margin-bottom: 20px;
+    color: #333;
+}
+
+.form-group {
+    display: flex;
+    align-items: center; /* Align checkbox/radio with label */
+    gap: 15px; /* Space between input and label */
+    margin-bottom: 20px;
+}
+
+label {
+    font-size: 14px;
+    color: #555;
+    cursor: pointer;
+}
+
+.form-control {
+    background: #bfbcc7;
+    border: none;
+    outline: none;
+    border-radius: 10px;
+    box-shadow: inset 6px 6px 12px #aeacb1, inset -6px -6px 12px #ffffff;
+    padding: 15px;
+    font-size: 14px;
+    width: 100%;
+}
+
+.form-control:focus {
+    box-shadow: inset 6px 6px 12px #bebebe, inset -6px -6px 12px #ffffff, 0 0 5px rgba(0, 0, 0, 0.2);
+}
+
+.submit-btn {
+    width: 100%;
+    padding: 15px;
+    font-size: 16px;
+    color: rgb(56, 21, 138);
+    background: linear-gradient(145deg, #6f9aff, #0c101b);
+    border: none;
+    border-radius: 10px;
+    text-transform: uppercase;
+    cursor: pointer;
+    box-shadow: 6px 6px 12px #3d2f64, -6px -6px 12px #2a1e70;
+    transition: all 0.3s ease-in-out;
+}
+
+.submit-btn:hover {
+    box-shadow: 8px 8px 16px #6f62df, -8px -8px 16px #3d2899;
+    transform: scale(1.02);
+}
+
+input[type="checkbox"], input[type="radio"] {
+    appearance: none; /* Remove default styling */
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    margin: 0; /* Remove extra margin */
+    vertical-align: middle; /* Align with label text */
+    background: #bfbcc7;
+    border-radius: 5px;
+    border: 2px solid #6f9aff;
+    box-shadow: inset 4px 4px 8px #aeacb1, inset -4px -4px 8px #ffffff;
+    cursor: pointer;
+    transition: all 0.3s ease-in-out;
+}
+
+input[type="checkbox"]:focus, input[type="radio"]:focus {
+    outline: none;
+    box-shadow: 0 0 5px #6f9aff;
+    border-color: #0c101b;
+}
+
+input[type="checkbox"]:checked {
+    background: linear-gradient(145deg, #6f9aff, #0c101b);
+    box-shadow: inset 2px 2px 4px #3d2f64, inset -2px -2px 4px #2a1e70;
+    border-color: #3d2899;
+    position: relative;
+}
+
+input[type="checkbox"]:checked::after {
+    content: '✔';
+    font-size: 14px;
+    color: #fff;
+    position: absolute;
+    top: 2px;
+    left: 4px;
+}
+
+input[type="radio"]:checked {
+    background: radial-gradient(circle, #6f9aff 50%, #0c101b 100%);
+    box-shadow: inset 2px 2px 4px #3d2f64, inset -2px -2px 4px #2a1e70;
+    border-color: #3d2899;
+    position: relative;
+}
+
+input[type="radio"]:checked::after {
+    content: '';
+    display: block;
+    width: 10px;
+    height: 10px;
+    background: #fff;
+    border-radius: 50%;
+    position: absolute;
+    top: 4px;
+    left: 4px;
+}
+
+
+    </style>
+</head>
+<body>
+    <div class="contact-form">
+        <h2>YWCA Membership Form</h2>
+        
+        <form method="POST" action="form.php">
+            <div class="mb-3">
+                <label for="name" class="form-label">Name in Full:</label>
+                <input type="text" class="form-control" id="name" name="name" required>
+            </div>
+            <div class="mb-3">
+                <label for="dob" class="form-label">Date of Birth:</label>
+                <input type="date" class="form-control" id="dob" name="dob" required>
+            </div>
+                <div class="mb-3">
+                    <label class="form-label">Age Group (tick mark) as on 30th june:</label><br>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" name="age_group" id="age_18_35" value="18-35 yrs" required>
+                        <label class="form-check-label" for="age_18_35">18-35 yrs</label>
+                    </div>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" name="age_group" id="age_36_50" value="36-50 yrs" required>
+                        <label class="form-check-label" for="age_36_50">36-50 yrs</label>
+                    </div>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" name="age_group" id="age_51_65" value="51-65 yrs" required>
+                        <label class="form-check-label" for="age_51_65">51-65 yrs</label>
+                    </div>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" name="age_group" id="age_65_plus" value="65+ yrs" required>
+                        <label class="form-check-label" for="age_65_plus">65+ yrs</label>
+                    </div>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" name="age_group" id="othersue="65+ yrs" required>
+                        <label class="form-check-label" for="others">Others</label>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label for="education" class="form-label">Educational Qualifications:</label>
+                    <input type="text" class="form-control" id="education" name="education" required>
+                </div>
+                <div class="mb-3">
+                    <label for="residential_address" class="form-label">Residential Address:</label>
+                    <textarea class="form-control" id="residential_address" name="residential_address" rows="3" required></textarea>
+                </div>
+                <div class="mb-3">
+                    <label for="communication_address" class="form-label">Address for Communication:</label>
+                    <textarea class="form-control" id="communication_address" name="communication_address" rows="3" required></textarea>
+                </div>
+                <div class="mb-3">
+                    <label for="email" class="form-label">Email Address:</label>
+                    <input type="email" class="form-control" id="email" name="email" required>
+                </div>
+                <div class="mb-3">
+                    <label for="phone" class="form-label">Phone Number or Mobile Number:</label>
+                    <input type="tel" class="form-control" id="phone" name="phone" required>
+                </div>
+                <div class="mb-3">
+                    <label for="nationality" class="form-label">Nationality:</label>
+                    <input type="text" class="form-control" id="nationality" name="nationality" required>
+                </div>
+                <div class="mb-3">
+                    <label for="occupation" class="form-label">Occupation:</label>
+                    <input type="text" class="form-control" id="occupation" name="occupation" required>
+                </div>
+                <div class="mb-3">
+                    <label for="original_membership_year" class="form-label">Year of Original Membership:</label>
+                    <input type="number" class="form-control" id="original_membership_year" name="original_membership_year" required>
+                </div>
+                <div class="mb-3">
+                    <label for="break_year" class="form-label">Year of Break in Membership:</label>
+                    <input type="number" class="form-control" id="break_year" name="break_year" required>
+                </div>
+                <div class="mb-3">
+                    <label for="committee_experience" class="form-label">Committee Experience:</label>
+                    <textarea class="form-control" id="committee_experience" name="committee_experience" rows="3"></textarea>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Have you been an office bearer?</label><br>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" name="office_bearer" value="Yes">
+                        <label class="form-check-label" for="office_bearer">Yes</label>
+                    </div>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" name="office_bearer" value="No">
+                        <label class="form-check-label" for="office_bearer">No</label>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Are you a Board Member?</label><br>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" name="board_member" value="Yes">
+                        <label class="form-check-label" for="board_member">Yes</label>
+                    </div>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" name="board_member" value="No">
+                        <label class="form-check-label" for="board_member">No</label>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Have you volunteered for any work?</label><br>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" name="voluntary_work" value="Yes">
+                        <label class="form-check-label" for="voluntary_work">Yes</label>
+                    </div>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" name="voluntary_work" value="No">
+                        <label class="form-check-label" for="voluntary_work">No</label>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label for="interest_areas" class="form-label">Areas of Interest:</label>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="interest_areas[]" value="Community Development" id="communityDevelopment">
+                                <label class="form-check-label" for="communityDevelopment">Community Development</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="interest_areas[]" value="Vocational Skills" id="vocationalSkills">
+                                <label class="form-check-label" for="vocationalSkills">Vocational Skills</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="interest_areas[]" value="Hostels" id="hostels">
+                                <label class="form-check-label" for="hostels">Hostels</label>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="interest_areas[]" value="Young Women Programme" id="youngWomenProgramme">
+                                <label class="form-check-label" for="youngWomenProgramme">Young Women Programme</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="interest_areas[]" value="Education" id="education">
+                                <label class="form-check-label" for="education">Education</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="interest_areas[]" value="Ecumenical Programmes" id="ecumenicalProgrammes">
+                                <label class="form-check-label" for="ecumenicalProgrammes">Ecumenical Programmes</label>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="interest_areas[]" value="Social Justice Issues" id="socialJusticeIssues">
+                                <label class="form-check-label" for="socialJusticeIssues">Social Justice Issues</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="interest_areas[]" value="Fund Raising" id="fundRaising">
+                                <label class="form-check-label" for="fundRaising">Fund Raising</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="interest_areas[]" value="Communication" id="communication">
+                                <label class="form-check-label" for="communication">Communication</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="interest_areas[]" value="Others" id="others">
+                                <label class="form-check-label" for="others">Others</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                                    
+                <div class="form-group text-center">
+                    <button type="submit" class="submit-btn">Submit</button>
+                    <a href="receipt_form1.php" class="btn btn-outline-primary">Go to Receipt Form</a>
+                    <a href="form_db.php" class="btn btn-outline-primary">Show Information</a>
+                    <a href="index.php" class="btn btn-outline-primary">Home</a>
+                </div>
+            </form>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
+
+
+
